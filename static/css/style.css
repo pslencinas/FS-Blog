@@ -1,0 +1,92 @@
+.logo {
+  margin-top: 20px;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.row {
+  width: 100%;
+}
+
+.login-area {
+    font-size: 18px;
+    color: #ffffff;
+    text-align: right;
+    margin-top: 10px;
+    background: #26a69a;
+
+}
+
+.main-title a {
+  color: #1a237e;
+}
+.main-title {
+    display: block;
+    color: #ffffff;
+    font-size: 40px;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+    background: #26a69a;
+}
+
+.new-post-title a {
+  color: #1565c0;
+}
+
+.new-post-title {
+    font-size: 18px;
+    color: #ffffff;
+    text-align: left;
+    background: #26a69a;
+    padding: 10px;
+    height: 50px;
+}
+
+.login-link {
+    color: #ffffff;
+
+}
+
+.login-link:visited {
+    color: #ffffff;
+}
+
+.login-link:hover {
+    text-decoration: underline;
+}
+
+.border-top10 {
+  margin-top: 10px;
+}
+.footer {
+  text-align: center;
+  margin: 20px;
+}
+
+@media screen and (max-width: 480px) {
+  .title-super {
+    font-size: 20px;
+  }
+
+  .title-sub {
+    font-size: 16px;
+  }
+
+  .text-muted {
+    font-size: 20px;
+  }
+}
+
+@media screen and (min-width: 481px) and (max-width: 980px) {
+  .title-super {
+    font-size: 28px;
+  }
+
+  .title-sub {
+    font-size: 20px;
+  }
+}   
