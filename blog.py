@@ -67,7 +67,7 @@ def render_post(response, post):
 class MainPage(BlogHandler):
   def get(self):
 		#self.write('Hello, Udacity!')
-		posts = greetings = Post.all().order('-created')	#post es un objeto de la clase Post
+		posts = Post.all().order('-created')	#post es un objeto de la clase Post
 		self.render('front.html', posts = posts)
 
 
@@ -134,7 +134,8 @@ class Post(db.Model):
 
 class BlogFront(BlogHandler):
 	def get(self):
-		posts = greetings = Post.all().order('-created')
+		#posts = db.GqlQuery("select * from POst order by created desc limit 10")		#es el mismo query
+		posts = Post.all().order('-created')
 		self.render('front.html', posts = posts)
 
 class PostPage(BlogHandler):
@@ -259,11 +260,40 @@ class Logout(BlogHandler):
 		self.logout()
 		self.redirect('/blog')
 
+#Delete Post
+class DeletePost(BlogHandler):
+    def get(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+		post = db.get(key)
+
+		if not post:
+            self.error(404)
+            return
+        if self.user:
+            self.render('deletepost.html', post=post)
+        else:
+            error = "In order to delete post, please login into the site"
+            self.render('front.html', error=error)
+
+
+ #    def post(self, post_id):
+ #        if not self.user:
+ #            return self.redirect('/blog')
+ #        key = ndb.Key('Post', int(post_id), parent=models.blog_key())
+ #        post = key.get()
+
+ #        if post and (post.author.id() == self.user.key.id()):
+ #            post.key.delete()
+ #            time.sleep(0.1)
+	# self.redirect('/')
+
+
 
 app = webapp2.WSGIApplication([('/', MainPage),
 							   ('/blog/?', BlogFront),
 							   ('/blog/([0-9]+)', PostPage),
 							   ('/blog/newpost', NewPost),
+							   ('/blog/deletepost/([0-9]+)', DeletePost),
 							   ('/signup', Register),
 							   ('/login', Login),
 							   ('/logout', Logout),

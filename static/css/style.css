@@ -46,6 +46,41 @@
     height: 50px;
 }
 
+
+.post {
+    margin-top: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+
+}
+
+.post-heading {
+    position: relative;
+    border-bottom: 3px solid #666;
+}
+
+.post-title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.post-date {
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    color: #999;
+
+}
+
+.post-content {
+    margin-top: 5px;
+}
+
+.post-action {
+    margin-top: 5px;
+    text-align: right;
+}
+
 .login-link {
     color: #ffffff;
 
@@ -58,35 +93,3 @@
 .login-link:hover {
     text-decoration: underline;
 }
-
-.border-top10 {
-  margin-top: 10px;
-}
-.footer {
-  text-align: center;
-  margin: 20px;
-}
-
-@media screen and (max-width: 480px) {
-  .title-super {
-    font-size: 20px;
-  }
-
-  .title-sub {
-    font-size: 16px;
-  }
-
-  .text-muted {
-    font-size: 20px;
-  }
-}
-
-@media screen and (min-width: 481px) and (max-width: 980px) {
-  .title-super {
-    font-size: 28px;
-  }
-
-  .title-sub {
-    font-size: 20px;
-  }
-}   

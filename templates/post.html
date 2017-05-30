@@ -1,15 +1,23 @@
-<div class="post">
-  <div class="post-heading">
-    <div class="post-title">
-      {{p.subject}}
+<div class="col-md-12 col-sm-12 col-xs-12">
+  <div class="post">
+    <div class="post-heading">
+      <div class="post-title">
+        {{p.subject}}
+      </div>
+
+      <div class="post-date">
+        {{p.created.strftime("%b %d, %Y")}}
+      </div>
     </div>
 
-    <div class="post-date">
-      {{p.created.strftime("%b %d, %Y")}}
+    <div class="post-content">
+      {{p._render_text | safe}}
     </div>
-  </div>
+    <div class="post-action">
+      <a href="/blog/{{p.key().id()}}"><i class="fa fa-eye" aria-hidden="true"></i>View</a>
+      <a href="/blog/{{p.key().id()}}"><i class="fa fa-pencil fa-fw"></i>Edit</a>
+      <a href="/blog/deletepost/{{p.key().id()}}"><i class="fa fa-trash-o fa-fw"></i>Delete</a>
 
-  <div class="post-content">
-    {{p._render_text | safe}}
+      </div>
   </div>
 </div>
