@@ -93,3 +93,8 @@
 .login-link:hover {
     text-decoration: underline;
 }
+
+.error {
+    color: red;
+    text-align: center;
+}

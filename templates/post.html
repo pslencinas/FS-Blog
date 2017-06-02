@@ -13,11 +13,11 @@
     <div class="post-content">
       {{p._render_text | safe}}
     </div>
-    <div class="post-action">
-      <a href="/blog/{{p.key().id()}}"><i class="fa fa-eye" aria-hidden="true"></i>View</a>
-      <a href="/blog/{{p.key().id()}}"><i class="fa fa-pencil fa-fw"></i>Edit</a>
-      <a href="/blog/deletepost/{{p.key().id()}}"><i class="fa fa-trash-o fa-fw"></i>Delete</a>
-
+      <div class="post-action">
+        <a href="/blog/{{p.key().id()}}"><i class="fa fa-eye" aria-hidden="true"></i>View</a>
+        <a href="/blog/like/{{p.key().id()}}"><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>Like</a>
+        <a href="/blog/editpost/{{p.key().id()}}"><i class="fa fa-pencil fa-fw"></i>Edit</a>
+        <a href="/blog/deletepost/{{p.key().id()}}"><i class="fa fa-trash-o fa-fw"></i>Delete</a>
       </div>
   </div>
 </div>

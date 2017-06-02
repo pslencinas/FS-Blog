@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="col-md-6 col-sm-6 col-xs-6 col-md-offset-3">
+    <form method="post" class="input-group input-group-lg">
+      <p>Subject</p>
+      <div class="input-group input-group-lg">
+        <input type="text" name="subject" value="{{subject}}" class="form-control">
+      </div>
+      <br>
+      <p>Blog</p>
+      <div class="input-group input-group-lg">
+        <textarea name="content" class="form-control" rows="10">{{content}}</textarea>
+      </div>
+      <br>
+      <div class="error">{{error}}</div>
+      <br>
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+{% endblock %}

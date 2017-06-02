@@ -5,20 +5,22 @@
   <div class="col-md-12">
     <h2>Delete Post</h2>
   </div>
+  {% if error %}
+  <div class="alert alert-danger">
+    <span class = "glyphicon glyphicon-alert" aria-hidden= "true"></span>
+    {{error}}
+  </div>
+  {% else %}
   <form method="post">
     <label>
       Do you really want to delete this post?
       <div class="extrabuttons">
-        <button type="submit" class= "btn btn-primary btn-default-lg"name="submit" >Submit</button>
+        <button type="submit" class= "btn btn-primary btn-default-lg" name="submit" >Submit</button>
         <a class= "btn btn-primary btn-default-lg" href="/" role = "button">Back</a>
       </div>
     </label>
   </form>
+  {% endif %}
 </div>
-{% if error %}
-<div class="alert alert-danger">
-  <span class = "glyphicon glyphicon-alert" aria-hidden= "true"></span>
-  {{error}}
-</div>
-{% endif %}
+
 {% endblock %}

@@ -3,11 +3,11 @@ import re
 import random
 import hashlib
 import hmac
+import time
 from string import letters
-
 import webapp2
 import jinja2
-
+import logging
 from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -65,9 +65,8 @@ def render_post(response, post):
 	response.out.write(post.content)
 
 class MainPage(BlogHandler):
-  def get(self):
-		#self.write('Hello, Udacity!')
-		posts = Post.all().order('-created')	#post es un objeto de la clase Post
+	def get(self):
+		posts = Post.all().order('-created')
 		self.render('front.html', posts = posts)
 
 
@@ -127,14 +126,21 @@ class Post(db.Model):
 	content = db.TextProperty(required = True)
 	created = db.DateTimeProperty(auto_now_add = True)
 	last_modified = db.DateTimeProperty(auto_now = True)
+	author = db.IntegerProperty(required = True)
 
 	def render(self):
 		self._render_text = self.content.replace('\n', '<br>')
 		return render_str("post.html", p = self)
 
+#Like Model
+class Like(db.Model):
+	authorLike = db.IntegerProperty(required = True)
+	post = db.IntegerProperty(required = True)
+	like = db.IntegerProperty()
+
+
 class BlogFront(BlogHandler):
 	def get(self):
-		#posts = db.GqlQuery("select * from POst order by created desc limit 10")		#es el mismo query
 		posts = Post.all().order('-created')
 		self.render('front.html', posts = posts)
 
@@ -162,11 +168,14 @@ class NewPost(BlogHandler):
 
 		subject = self.request.get('subject')
 		content = self.request.get('content')
+		author = self.user.key().id();
 
 		if subject and content:
-			p = Post(parent = blog_key(), subject = subject, content = content)
+			p = Post(parent = blog_key(), subject = subject, content = content, author = author)
 			p.put()
-			posts = greetings = Post.all().order('-created')
+			time.sleep(0.1)
+			
+			posts = Post.all().order('-created')
 			self.render('front.html', posts = posts)
 			#self.redirect('/blog/%s' % str(p.key().id()))
 		else:
@@ -260,40 +269,114 @@ class Logout(BlogHandler):
 		self.logout()
 		self.redirect('/blog')
 
+#Edit Post
+class EditPost(BlogHandler):
+	def get(self, post_id):
+		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+		post = db.get(key)
+
+		if self.user:
+			if post.author != self.user.key().id():
+				error = "You do not have permission to edit this post!"
+				self.render("permalink.html", post = post, error=error)
+			else:
+				self.render("editpost.html", subject=post.subject, content=post.content)
+		else:
+			return self.redirect('/blog')
+
+	def post(self, post_id):
+		if not self.user:
+			return self.redirect('/blog')
+
+		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+		post = db.get(key)
+		userid = self.read_secure_cookie('user_id')
+		subject = self.request.get('subject')
+		content = self.request.get('content')
+
+		if subject and content:
+			post.subject = subject
+			post.content = content
+			post.put()
+			time.sleep(0.1)
+			self.redirect('/blog')
+		else:
+			error = "Please enter Subject and Content"
+			self.render("editpost.html", subject=subject, content=content, error=error)
+
 #Delete Post
 class DeletePost(BlogHandler):
-    def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+	def get(self, post_id):
+		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
 		post = db.get(key)
 
 		if not post:
-            self.error(404)
-            return
-        if self.user:
-            self.render('deletepost.html', post=post)
-        else:
-            error = "In order to delete post, please login into the site"
-            self.render('front.html', error=error)
+			self.error(404)
+			return
 
+		if post.author == self.user:
+			if self.user:
+				self.render("deletepost.html", post = post)
 
- #    def post(self, post_id):
- #        if not self.user:
- #            return self.redirect('/blog')
- #        key = ndb.Key('Post', int(post_id), parent=models.blog_key())
- #        post = key.get()
+			else:
+				error = "In order to delete post, please login into the site"
+				self.render('deletepost.html', error=error)
+		else:
+			error = "You do not have permission to delete this post!"
+			self.render("permalink.html", post = post, error=error)
 
- #        if post and (post.author.id() == self.user.key.id()):
- #            post.key.delete()
- #            time.sleep(0.1)
-	# self.redirect('/')
+	def post(self, post_id):
+		if not self.user:
+			return self.redirect("/blog")
+	
+		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+		post = db.get(key)
+		
+		if post and (post.author == self.user.key().id()):
+			post.delete()
+			time.sleep(0.1)
+		self.redirect('/blog')
 
+# Like Post
+class LikePost(BlogHandler):
+	def get(self, post_id):
+		if not self.user:
+			return self.redirect('/blog')
 
+		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+		post = db.get(key)	#aca tengo la info del creador del comentario
+
+		if not post:
+			self.error(404)
+			return
+
+		if post.author == self.user.key().id():
+			self.write("You can not like your own post")
+		else:
+			like_obj = Like.all().filter("post =", int(post_id))
+			#like_obj trae objetos de Like para analizar si ya likie ese comentario
+			if like_obj:
+				for obj in like_obj:
+					#logging.info ( "%d %d %d" %(obj.authorLike, obj.like,obj.post))
+					if(obj.authorLike == self.user.key().id()):
+						error = "You have liked this post!"
+						self.render("permalink.html", post = post, error=error)
+						return
+				like_obj = Like(authorLike=self.user.key().id(), post=post.key().id(), like=1)
+				like_obj.put()
+				self.redirect('/')
+			else:
+				like_obj = Like(authorLike=self.user.key().id(), post=post.key().id(), like=1)
+				like_obj.put()
+				self.redirect('/')
 
 app = webapp2.WSGIApplication([('/', MainPage),
 							   ('/blog/?', BlogFront),
 							   ('/blog/([0-9]+)', PostPage),
 							   ('/blog/newpost', NewPost),
 							   ('/blog/deletepost/([0-9]+)', DeletePost),
+							   ('/blog/editpost/([0-9]+)', EditPost),
+							   ('/blog/like/([0-9]+)', LikePost),
 							   ('/signup', Register),
 							   ('/login', Login),
 							   ('/logout', Logout),
