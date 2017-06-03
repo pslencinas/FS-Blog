@@ -70,7 +70,6 @@ class MainPage(BlogHandler):
 		self.render('front.html', posts = posts)
 
 
-##### user stuff
 def make_salt(length = 5):
 	return ''.join(random.choice(letters) for x in xrange(length))
 
@@ -379,11 +378,11 @@ class LikePost(BlogHandler):
 						error = "You have liked this post!"
 						self.render("permalink.html", post = post, error=error)
 						return
-				like_obj = Like(authorLike=self.user.key().id(), post=post.key().id(), like=1)
+				like_obj = Like(parent = blog_key(), authorLike=self.user.key().id(), post=post.key().id(), like=1)
 				like_obj.put()
 				self.redirect('/')
 			else:
-				like_obj = Like(authorLike=self.user.key().id(), post=post.key().id(), like=1)
+				like_obj = Like(parent = blog_key(), authorLike=self.user.key().id(), post=post.key().id(), like=1)
 				like_obj.put()
 				self.redirect('/')
 

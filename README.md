@@ -2,9 +2,11 @@
 
 download the google sdk for python in order to run this
 
+## Instructions
+
 Clone the repo from github
 
-cd "Blog_path"
+change directory: cd "Blog_path"
 
 then run dev_appserver.py .
 
