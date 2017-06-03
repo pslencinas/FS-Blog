@@ -1,0 +1,26 @@
+{% extends "base.html"%}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h2>Delete Comment</h2>
+  </div>
+  {% if error %}
+  <div class="alert alert-danger">
+    <span class = "glyphicon glyphicon-alert" aria-hidden= "true"></span>
+    
+  </div>
+  {% else %}
+  <form method="post">
+    <label>
+      Do you really want to delete this comment?
+      <div class="extrabuttons">
+        <button type="submit" class= "btn btn-primary btn-default-lg" name="submit" >Submit</button>
+        <a class= "btn btn-primary btn-default-lg" href="/" role = "button">Back</a>
+      </div>
+    </label>
+  </form>
+  {% endif %}
+</div>
+
+{% endblock %}

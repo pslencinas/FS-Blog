@@ -131,6 +131,7 @@ class Post(db.Model):
 	def render(self):
 		self._render_text = self.content.replace('\n', '<br>')
 		return render_str("post.html", p = self)
+	
 
 #Like Model
 class Like(db.Model):
@@ -138,6 +139,22 @@ class Like(db.Model):
 	post = db.IntegerProperty(required = True)
 	like = db.IntegerProperty()
 
+#Comment Model
+class Comment(db.Model):
+	post = db.IntegerProperty(required = True)
+	content = db.TextProperty(required = True)
+	created = db.DateTimeProperty(auto_now_add = True)
+	author = db.IntegerProperty(required = True)
+
+	@classmethod
+	def by_post_id(cls, post_id):
+		c = cls.all().filter('post =', int(post_id))
+		return c
+
+	@classmethod
+	def by_id(cls, post_id):
+		c = cls.all().filter('id() =', int(post_id))
+		return c
 
 class BlogFront(BlogHandler):
 	def get(self):
@@ -149,11 +166,13 @@ class PostPage(BlogHandler):
 		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
 		post = db.get(key)
 
+		comments = Comment.by_post_id(post_id)
+				
 		if not post:
 			self.error(404)
 			return
 
-		self.render("permalink.html", post = post)
+		self.render("permalink.html", post = post, comments=comments)
 
 class NewPost(BlogHandler):
 	def get(self):
@@ -282,11 +301,11 @@ class EditPost(BlogHandler):
 			else:
 				self.render("editpost.html", subject=post.subject, content=post.content)
 		else:
-			return self.redirect('/blog')
+			return self.redirect('/login')
 
 	def post(self, post_id):
 		if not self.user:
-			return self.redirect('/blog')
+			return self.redirect('/login')
 
 		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
 		post = db.get(key)
@@ -317,10 +336,8 @@ class DeletePost(BlogHandler):
 		if post.author == self.user:
 			if self.user:
 				self.render("deletepost.html", post = post)
-
 			else:
-				error = "In order to delete post, please login into the site"
-				self.render('deletepost.html', error=error)
+				return self.redirect('/login')
 		else:
 			error = "You do not have permission to delete this post!"
 			self.render("permalink.html", post = post, error=error)
@@ -341,7 +358,7 @@ class DeletePost(BlogHandler):
 class LikePost(BlogHandler):
 	def get(self, post_id):
 		if not self.user:
-			return self.redirect('/blog')
+			return self.redirect('/login')
 
 		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
 		post = db.get(key)	#aca tengo la info del creador del comentario
@@ -351,13 +368,13 @@ class LikePost(BlogHandler):
 			return
 
 		if post.author == self.user.key().id():
-			self.write("You can not like your own post")
+			error = "You can not like your own post!"
+			self.render("permalink.html", post = post, error=error)
 		else:
 			like_obj = Like.all().filter("post =", int(post_id))
 			#like_obj trae objetos de Like para analizar si ya likie ese comentario
 			if like_obj:
 				for obj in like_obj:
-					#logging.info ( "%d %d %d" %(obj.authorLike, obj.like,obj.post))
 					if(obj.authorLike == self.user.key().id()):
 						error = "You have liked this post!"
 						self.render("permalink.html", post = post, error=error)
@@ -370,6 +387,104 @@ class LikePost(BlogHandler):
 				like_obj.put()
 				self.redirect('/')
 
+# Comment
+class CreateComment(BlogHandler):
+	def get(self, post_id):
+		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+		post = db.get(key)	#aca tengo la info del creador del comentario
+
+		subject = post.subject
+		if self.user:
+			self.render("comment.html", subject=subject)
+		else:
+			self.redirect('/login')
+
+	def post(self, post_id):
+		if not self.user:
+			return self.redirect('/login')
+
+		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+		post = db.get(key)	#aca tengo la info del creador del comentario
+
+		if not post:
+			return self.redirect('/')
+
+		content = self.request.get('content')
+		if content:
+			c = Comment(parent = blog_key(), post=post.key().id(), content=content, author=self.user.key().id())
+			c.put()
+			time.sleep(0.1)
+			self.redirect('/')
+		else:
+			error = "comment error"
+			self.render("comment.html", error=error)
+
+#Delete Comment
+class DeleteComment(BlogHandler):
+	def get(self, post_id):
+		key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
+		comment = db.get(key)
+		
+		if not comment:
+			self.error(404)
+			return
+
+		if comment.author == self.user.key().id():
+			if self.user:
+				self.render("deletecomment.html", comment = comment)
+
+			else:
+				return self.redirect('/login')
+		else:
+			error = "You can not delete this comment"
+			self.render("deletecomment.html", error = error)
+
+	def post(self, post_id):
+		if not self.user:
+			return self.redirect("/blog")
+	
+		key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
+		comment = db.get(key)
+		
+		if comment and (comment.author == self.user.key().id()):
+			comment.delete()
+			time.sleep(0.1)
+		self.redirect('/blog')
+
+#Edit Comment
+class EditComment(BlogHandler):
+	def get(self, post_id):
+		key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
+		comment = db.get(key)
+
+		if self.user:
+			if comment.author != self.user.key().id():
+				error = "You do not have permission to edit this comment!"
+				self.render("editcomment.html", content=comment.content, error=error)
+			else:
+				self.render("editcomment.html", content=comment.content)
+		else:
+			return self.redirect('/login')
+
+	def post(self, post_id):
+		if not self.user:
+			return self.redirect('/login')
+
+		key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
+		comment = db.get(key)
+		
+		content = self.request.get('content')
+
+		if content:
+			comment.content = content
+			comment.put()
+			time.sleep(0.1)
+			self.redirect('/blog')
+		else:
+			error = "Please enter Content"
+			self.render("editcomment.html", content=content, error=error)
+
+
 app = webapp2.WSGIApplication([('/', MainPage),
 							   ('/blog/?', BlogFront),
 							   ('/blog/([0-9]+)', PostPage),
@@ -377,6 +492,9 @@ app = webapp2.WSGIApplication([('/', MainPage),
 							   ('/blog/deletepost/([0-9]+)', DeletePost),
 							   ('/blog/editpost/([0-9]+)', EditPost),
 							   ('/blog/like/([0-9]+)', LikePost),
+							   ('/blog/newcomment/([0-9]+)', CreateComment),
+							   ('/blog/deletecomment/([0-9]+)', DeleteComment),
+							   ('/blog/editcomment/([0-9]+)', EditComment),
 							   ('/signup', Register),
 							   ('/login', Login),
 							   ('/logout', Logout),

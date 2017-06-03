@@ -19,7 +19,15 @@
         <a href="/blog/newcomment/{{p.key().id()}}"><i class="fa fa-pencil-square-o" aria-hidden="true""></i>Add Coment</a>
         <a href="/blog/deletepost/{{p.key().id()}}"><i class="fa fa-trash-o fa-fw"></i>Delete</a>
       </div>
-   
+    <div>
+      {% for c in p.comments %}
+      <div class="comments">
+        {{c.content}}
+
+      </div>
+      {% endfor %}
+
+    </div>
 
   </div>
 </div>

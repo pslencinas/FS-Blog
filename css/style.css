@@ -16,13 +16,19 @@
     color: #ffffff;
     text-align: right;
     margin-top: 10px;
-    background: #26a69a;
+    background: #01579b;
 
 }
 
 .main-title a {
-  color: #1a237e;
+  color: #ffffff;
 }
+
+.title:hover {
+    text-decoration: underline;
+    color: #cfd8dc;
+}
+
 .main-title {
     display: block;
     color: #ffffff;
@@ -30,7 +36,7 @@
     font-weight: bold;
     text-align: center;
     padding: 20px;
-    background: #26a69a;
+    background: #01579b;
 }
 
 .new-post-title a {
@@ -41,7 +47,7 @@
     font-size: 18px;
     color: #ffffff;
     text-align: left;
-    background: #26a69a;
+    background: #01579b;
     padding: 10px;
     height: 50px;
 }
@@ -69,11 +75,23 @@
     right: 0px;
     bottom: 0px;
     color: #999;
-
 }
 
 .post-content {
     margin-top: 5px;
+}
+
+.post-authorcomment {
+    padding: 10px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.post-comment {
+    background: #b3e5fc;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 5px;
 }
 
 .post-action {
@@ -82,12 +100,12 @@
 }
 
 .login-link {
-    color: #ffffff;
+    color: #cfd8dc;
 
 }
 
 .login-link:visited {
-    color: #ffffff;
+    color: #cfd8dc;
 }
 
 .login-link:hover {
