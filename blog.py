@@ -30,9 +30,15 @@ def check_secure_val(secure_val):
 
 class BlogHandler(webapp2.RequestHandler):
 	def write(self, *a, **kw):
+		"""
+		Write the output to the browser
+		"""
 		self.response.out.write(*a, **kw)
 
 	def render_str(self, template, **params):
+		"""
+		Renders html template
+		"""
 		params['user'] = self.user
 		return render_str(template, **params)
 
@@ -40,19 +46,31 @@ class BlogHandler(webapp2.RequestHandler):
 		self.write(self.render_str(template, **kw))
 
 	def set_secure_cookie(self, name, val):
+		"""
+		Set secure cookie
+		"""
 		cookie_val = make_secure_val(val)
 		self.response.headers.add_header(
 			'Set-Cookie',
 			'%s=%s; Path=/' % (name, cookie_val))
 
 	def read_secure_cookie(self, name):
+		"""
+		Read cookie from browser
+		"""
 		cookie_val = self.request.cookies.get(name)
 		return cookie_val and check_secure_val(cookie_val)
 
 	def login(self, user):
+		"""
+		Check User
+		"""
 		self.set_secure_cookie('user_id', str(user.key().id()))
 
 	def logout(self):
+		"""
+		Remove login information
+		"""
 		self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
 	def initialize(self, *a, **kw):
@@ -64,6 +82,7 @@ def render_post(response, post):
 	response.out.write('<b>' + post.subject + '</b><br>')
 	response.out.write(post.content)
 
+#Main Function
 class MainPage(BlogHandler):
 	def get(self):
 		posts = Post.all().order('-created')
@@ -87,21 +106,33 @@ def users_key(group = 'default'):
 	return db.Key.from_path('users', group)
 
 class User(db.Model):
+	"""
+    Stores user information
+    """
 	name = db.StringProperty(required = True)
 	pw_hash = db.StringProperty(required = True)
 	email = db.StringProperty()
 
 	@classmethod
 	def by_id(cls, uid):
+		"""
+        Returns user id from User object
+        """
 		return User.get_by_id(uid, parent = users_key())
 
 	@classmethod
 	def by_name(cls, name):
+		"""
+        Fetchs users by name from the User object
+        """
 		u = User.all().filter('name =', name).get()
 		return u
 
 	@classmethod
 	def register(cls, name, pw, email = None):
+		"""
+        Creates the new user in the User object.
+        """
 		pw_hash = make_pw_hash(name, pw)
 		return User(parent = users_key(),
 					name = name,
@@ -110,6 +141,9 @@ class User(db.Model):
 
 	@classmethod
 	def login(cls, name, pw):
+		"""
+		Login method
+		"""
 		u = cls.by_name(name)
 		if u and valid_pw(name, pw, u.pw_hash):
 			return u
@@ -121,6 +155,9 @@ def blog_key(name = 'default'):
 	return db.Key.from_path('blogs', name)
 
 class Post(db.Model):
+	"""
+	post datastore
+	"""
 	subject = db.StringProperty(required = True)
 	content = db.TextProperty(required = True)
 	created = db.DateTimeProperty(auto_now_add = True)
@@ -134,12 +171,18 @@ class Post(db.Model):
 
 #Like Model
 class Like(db.Model):
+	"""
+	Like datastore
+	"""
 	authorLike = db.IntegerProperty(required = True)
 	post = db.IntegerProperty(required = True)
 	like = db.IntegerProperty()
 
 #Comment Model
 class Comment(db.Model):
+	"""
+	Comment datastore
+	"""
 	post = db.IntegerProperty(required = True)
 	content = db.TextProperty(required = True)
 	created = db.DateTimeProperty(auto_now_add = True)
@@ -162,6 +205,9 @@ class BlogFront(BlogHandler):
 
 class PostPage(BlogHandler):
 	def get(self, post_id):
+		"""
+        Renders Posts to home page
+        """
 		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
 		post = db.get(key)
 
@@ -174,15 +220,18 @@ class PostPage(BlogHandler):
 		self.render("permalink.html", post = post, comments=comments)
 
 class NewPost(BlogHandler):
+	"""
+	Creates new posts
+	"""
 	def get(self):
 		if self.user:
 			self.render("newpost.html")
 		else:
-			self.redirect("/login")
+			return self.redirect("/login")
 
 	def post(self):
 		if not self.user:
-			self.redirect('/blog')
+			return self.redirect('/blog')
 
 		subject = self.request.get('subject')
 		content = self.request.get('content')
@@ -195,7 +244,6 @@ class NewPost(BlogHandler):
 			
 			posts = Post.all().order('-created')
 			self.render('front.html', posts = posts)
-			#self.redirect('/blog/%s' % str(p.key().id()))
 		else:
 			error = "subject and content, please!"
 			self.render("newpost.html", subject=subject, content=content, error=error)
@@ -214,6 +262,7 @@ EMAIL_RE  = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
 def valid_email(email):
 	return not email or EMAIL_RE.match(email)
 
+#Signup Function
 class Signup(BlogHandler):
 	def get(self):
 		self.render("signup-form.html")
@@ -264,8 +313,9 @@ class Register(Signup):
 			u.put()
 
 			self.login(u)
-			self.redirect('/blog')
+			return self.redirect('/blog')
 
+#Login Function
 class Login(BlogHandler):
 	def get(self):
 		self.render('login-form.html')
@@ -277,7 +327,7 @@ class Login(BlogHandler):
 		u = User.login(username, password)
 		if u:
 			self.login(u)
-			self.redirect('/blog')
+			return self.redirect('/blog')
 		else:
 			msg = 'Invalid login'
 			self.render('login-form.html', error = msg)
@@ -285,7 +335,7 @@ class Login(BlogHandler):
 class Logout(BlogHandler):
 	def get(self):
 		self.logout()
-		self.redirect('/blog')
+		return self.redirect('/blog')
 
 #Edit Post
 class EditPost(BlogHandler):
@@ -308,19 +358,25 @@ class EditPost(BlogHandler):
 
 		key = db.Key.from_path('Post', int(post_id), parent=blog_key())
 		post = db.get(key)
-		userid = self.read_secure_cookie('user_id')
-		subject = self.request.get('subject')
-		content = self.request.get('content')
 
-		if subject and content:
-			post.subject = subject
-			post.content = content
-			post.put()
-			time.sleep(0.1)
-			self.redirect('/blog')
-		else:
-			error = "Please enter Subject and Content"
-			self.render("editpost.html", subject=subject, content=content, error=error)
+		if post is not None:
+			userid = self.read_secure_cookie('user_id')
+			subject = self.request.get('subject')
+			content = self.request.get('content')
+
+			if post.author != self.user.key().id():
+				error = "You do not have permission to edit this post!"
+				self.render("editpost.html", subject=subject, content=content, error=error)
+			else:
+				if subject and content:
+					post.subject = subject
+					post.content = content
+					post.put()
+					time.sleep(0.1)
+					return self.redirect('/blog')
+				else:
+					error = "Please enter Subject and Content"
+					self.render("editpost.html", subject=subject, content=content, error=error)
 
 #Delete Post
 class DeletePost(BlogHandler):
@@ -332,7 +388,7 @@ class DeletePost(BlogHandler):
 			self.error(404)
 			return
 
-		if post.author == self.user:
+		if post.author == self.user.key().id():
 			if self.user:
 				self.render("deletepost.html", post = post)
 			else:
@@ -351,7 +407,7 @@ class DeletePost(BlogHandler):
 		if post and (post.author == self.user.key().id()):
 			post.delete()
 			time.sleep(0.1)
-		self.redirect('/blog')
+		return self.redirect('/blog')
 
 # Like Post
 class LikePost(BlogHandler):
@@ -380,11 +436,11 @@ class LikePost(BlogHandler):
 						return
 				like_obj = Like(parent = blog_key(), authorLike=self.user.key().id(), post=post.key().id(), like=1)
 				like_obj.put()
-				self.redirect('/')
+				return self.redirect('/')
 			else:
 				like_obj = Like(parent = blog_key(), authorLike=self.user.key().id(), post=post.key().id(), like=1)
 				like_obj.put()
-				self.redirect('/')
+				return self.redirect('/')
 
 # Comment
 class CreateComment(BlogHandler):
@@ -396,7 +452,7 @@ class CreateComment(BlogHandler):
 		if self.user:
 			self.render("comment.html", subject=subject)
 		else:
-			self.redirect('/login')
+			return self.redirect('/login')
 
 	def post(self, post_id):
 		if not self.user:
@@ -413,7 +469,7 @@ class CreateComment(BlogHandler):
 			c = Comment(parent = blog_key(), post=post.key().id(), content=content, author=self.user.key().id())
 			c.put()
 			time.sleep(0.1)
-			self.redirect('/')
+			return self.redirect('/')
 		else:
 			error = "comment error"
 			self.render("comment.html", error=error)
@@ -448,7 +504,7 @@ class DeleteComment(BlogHandler):
 		if comment and (comment.author == self.user.key().id()):
 			comment.delete()
 			time.sleep(0.1)
-		self.redirect('/blog')
+		return self.redirect('/blog')
 
 #Edit Comment
 class EditComment(BlogHandler):
@@ -474,14 +530,18 @@ class EditComment(BlogHandler):
 		
 		content = self.request.get('content')
 
-		if content:
-			comment.content = content
-			comment.put()
-			time.sleep(0.1)
-			self.redirect('/blog')
-		else:
-			error = "Please enter Content"
+		if comment.author != self.user.key().id():
+			error = "You do not have permission to edit this post!"
 			self.render("editcomment.html", content=content, error=error)
+		else:
+			if content:
+				comment.content = content
+				comment.put()
+				time.sleep(0.1)
+				return self.redirect('/blog')
+			else:
+				error = "Please enter Content"
+				self.render("editcomment.html", content=content, error=error)
 
 
 app = webapp2.WSGIApplication([('/', MainPage),
