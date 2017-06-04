@@ -11,13 +11,19 @@ indexes:
 # your application using appcfg.py.
 
 - kind: Post
-  ancestor: yes
+  ancestor: no
   properties:
   - name: created
     direction: desc
 
 - kind: Post
-  ancestor: yes
+  ancestor: no
   properties:
   - name: date
+    direction: desc
+
+- kind: Comment
+  ancestor: no
+  properties:
+  - name: created
     direction: desc

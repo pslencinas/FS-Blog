@@ -484,15 +484,15 @@ class DeleteComment(BlogHandler):
 			self.error(404)
 			return
 
-		if comment.author == self.user.key().id():
-			if self.user:
-				self.render("deletecomment.html", comment = comment)
-
+		if self.user:
+			if comment.author != self.user.key().id():
+				error = "You can not delete this comment"
+				self.render("deletecomment.html", error = error)
 			else:
-				return self.redirect('/login')
+				self.render("deletecomment.html", comment = comment)
 		else:
-			error = "You can not delete this comment"
-			self.render("deletecomment.html", error = error)
+			return self.redirect('/login')
+				
 
 	def post(self, post_id):
 		if not self.user:
