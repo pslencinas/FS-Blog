@@ -530,7 +530,7 @@ class EditComment(BlogHandler):
 		
 		content = self.request.get('content')
 
-		if comment.author != self.user.key().id():
+		if comment and (comment.author == self.user.key().id()):
 			error = "You do not have permission to edit this post!"
 			self.render("editcomment.html", content=content, error=error)
 		else:
